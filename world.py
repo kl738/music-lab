@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import spearmanr
 
 """
 The World class describes a single instance of an independent world in the
@@ -11,22 +12,27 @@ class World:
         self.p = p
         self.generateItems(c)
         self.generatePeople(p)
+        self.spearman = []
     def generateItems(self, c):
         """
         Generates cultural items with a normally distributed intrinsic value
         and a list of 0s to represent the number of times each item has been
         "listened" to.
         """
-        self.itemValues = np.random.normal(50, 10, size = c)
+        self.itemValues = np.random.normal(50, 15, size = c)
         self.itemCounts = [0] * c
     def generatePeople(self, p):
         """
         Generates simulated people with a normally distributed susceptibility
-        range from 0(least susceptible) to 1(most susceptible) and a random
-        order of preference for the cultural items.
+        range from 0(least susceptible) to 1(most susceptible) and an
+        order of preference for the cultural items based on diversity
         """
         self.peopleSuscepts = np.random.normal(.5, .1, size = p)
+        #Diversity of preferences here is completely diverse
         self.peoplePrefs = [np.random.permutation(self.c) for _ in range(p)]
+        #Diversity of preferences here is the same random permutation
+        # perm = np.random.permutation(self.c)
+        # self.peoplePrefs = [perm for _ in range(p)]
     def simulate(self):
         """
         Simulates the world for all people, by randomly generating a permutation
@@ -57,15 +63,4 @@ class World:
             else:
                 item = self.peoplePrefs[i][itemChoice]
                 self.itemCounts[item] += 1
-            print(self.itemCounts)
-
-def simple_test():
-    w = World(4,5)
-    print(w.itemValues)
-    print(w.itemCounts)
-    print(w.peopleSuscepts)
-    print(w.peoplePrefs)
-    w.simulate()
-
-if __name__ == "__main__":
-    simple_test()
+            self.spearman.append(spearmanr(self.itemCounts,self.itemValues)[0])

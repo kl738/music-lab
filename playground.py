@@ -3,6 +3,9 @@ Ignore this file. Playground for developer.
 """
 
 import numpy as np
+from scipy.stats import spearmanr
 
-l = [3, 24, 10, 23, 2]
-print(sorted(enumerate(l),key=lambda x: x[1], reverse= True))
+l1 = [2,1,3,4,5]
+l2 = [3,2,4,5,6]
+
+print(spearmanr(l1,l2))
