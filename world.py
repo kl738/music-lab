@@ -1,66 +1,88 @@
 import numpy as np
-from scipy.stats import spearmanr
+import random
 
-"""
-The World class describes a single instance of an independent world in the
-Music Lab study.
-"""
 class World:
-    def __init__(self, c, p):
-        """Initializing world with items and people."""
-        self.c = c
+    def __init__(self, d, n, s, v, e, p, c):
+        """
+        d = dimensions
+        n = number of agents
+        s = number of songs
+        v = variation among agents
+        e = epsilon
+        p = probability of imitation
+        c = convergence parameter
+        """
+        self.d = d
+        self.n = n
+        self.s = s
+        self.v = v
+        self.e = e
         self.p = p
-        self.generateItems(c)
-        self.generatePeople(p)
-        self.spearman = []
-    def generateItems(self, c):
+        self.c = c
+        self.setSongs()
+        self.setPeople()
+        self.setScores()
+        self.setPreferences()
+    def setSongs(self):
+        """sets scores for dimensions for each songs"""
+        self.songs = [np.random.uniform(0,1,self.d) for _ in range(self.s)]
+    def setPeople(self):
+        """sets the weights of people, random and invariant for each dimension"""
+        self.RW = [np.random.uniform(0,1,self.d) for _ in range(self.n)]
+        self.IW = [np.random.uniform(0,1,self.d)] * self.n
+    def setScores(self):
         """
-        Generates cultural items with a normally distributed intrinsic value
-        and a list of 0s to represent the number of times each item has been
-        "listened" to.
+        sets scores for each song by each person based on weighted sum calc.
+        W(i,d)=(1-V)*IW(d) + V*RW(d)
+        S(i,s) = sum from d=1 to D of [W(i,d)*(s,d)] + e
+        scores[i] is the list of scores of songs for person i
         """
-        self.itemValues = np.random.normal(50, 15, size = c)
-        self.itemCounts = [0] * c
-    def generatePeople(self, p):
+        self.scores = []
+        for i in range(self.n):
+            temp = []
+            for song in self.songs:
+                score = 0
+                for j,d in enumerate(song):
+                    score += (1-self.v)*self.IW[i][j]*d + self.v * self.RW[i][j]*d
+                if np.random.rand() < .5:
+                    temp.append(score + self.e)
+                else:
+                    temp.append(score - self.e)
+            self.scores.append(temp)
+    def setPreferences(self):
         """
-        Generates simulated people with a normally distributed susceptibility
-        range from 0(least susceptible) to 1(most susceptible) and an
-        order of preference for the cultural items based on diversity
+        preferences[i] is the preference list of person i. songs are represented
+        by their original index in self.songs
         """
-        self.peopleSuscepts = np.random.normal(.5, .1, size = p)
-        #Diversity of preferences here is completely diverse
-        self.peoplePrefs = [np.random.permutation(self.c) for _ in range(p)]
-        #Diversity of preferences here is the same random permutation
-        # perm = np.random.permutation(self.c)
-        # self.peoplePrefs = [perm for _ in range(p)]
+        self.preferences = []
+        for scorelst in self.scores:
+            scorelst = list(enumerate(scorelst))
+            scorelst.sort(reverse = True, key = lambda x: x[1])
+            temp = []
+            for i,j in scorelst:
+                temp.append(i)
+            self.preferences.append(temp)
     def simulate(self):
         """
-        Simulates the world for all people, by randomly generating a permutation
-        of people to specify the order. Then, based on the susceptibility of that
-        person, either pick between his own preferences or the listen counts of
-        others. Also, probabilistically pick the between the top 4 in either list
-        with p=0.4,0.3,0.2,0.1 respectively. Must be at least 4 items.
+        Simulates music lab experiment with urn model.
+        1. generates random permutation of people, people are later chosen at
+           time step without replacement
+        2. at each time step with probabibilty p, a person will pick from the urn
+           uniformly, else pick his own top preference.
+        3. if past 'c' songs are the same, then model has converged, and return
+           urn, counts of each song, and converged song.
+        4. if all 'n' people have gone, and model has converged, then there is no
+           convergence, return urn and counts and -1 for diverged
         """
-        order = np.random.permutation([i for i in range(self.p)])
-        for i in order:
-            flag = False
-            susc = np.random.random_sample()
-            if susc <= self.peopleSuscepts[i]:
-                flag = True
-            choice = np.random.random_sample()
-            if choice < 0.4:
-                itemChoice = 0
-            elif choice < 0.7:
-                itemChoice = 1
-            elif choice < 0.9:
-                itemChoice = 2
+        self.urn = []
+        np.random.permutation(self.preferences)
+        while self.preferences:
+            person = self.preferences.pop()
+            if self.urn = []:
+                self.urn.append(person[0])
             else:
-                itemChoice = 3
-            if flag:
-                s = sorted(enumerate(self.itemCounts),key=lambda x: x[1], reverse = True)
-                item = s[itemChoice][0]
-                self.itemCounts[item] += 1
-            else:
-                item = self.peoplePrefs[i][itemChoice]
-                self.itemCounts[item] += 1
-            self.spearman.append(spearmanr(self.itemCounts,self.itemValues)[0])
+                if np.random.rand() < p:
+                    choice = random.choice(self.urn)
+                    self.urn.append(choice)
+                else:
+                    self.urn.append(person[0])
