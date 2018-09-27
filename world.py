@@ -70,15 +70,24 @@ class World:
         2. at each time step with probabibilty p, a person will pick from the urn
            uniformly, else pick his own top preference.
         3. if past 'c' songs are the same, then model has converged, and return
-           urn, counts of each song, and converged song.
+           urn
         4. if all 'n' people have gone, and model has converged, then there is no
-           convergence, return urn and counts and -1 for diverged
+           convergence, return urn
         """
         self.urn = []
         np.random.permutation(self.preferences)
         while self.preferences:
+            if len(self.urn) < self.c-1:
+                pass
+            else:
+                flag = True
+                for i in range(len(self.urn)-c+1, len(self.urn)):
+                    if self.urn[i] != self.urn[i-1]:
+                        flag = False
+                if flag:
+                    return self.urn, self.urn(len(self.urn)-1)
             person = self.preferences.pop()
-            if self.urn = []:
+            if self.urn == []:
                 self.urn.append(person[0])
             else:
                 if np.random.rand() < p:
@@ -86,3 +95,4 @@ class World:
                     self.urn.append(choice)
                 else:
                     self.urn.append(person[0])
+        return self.urn, -1
