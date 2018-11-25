@@ -140,6 +140,7 @@ def graph(simulations, theoretical, length, title, filename):
 
 def experiment(iterations,p,mover,title, filename):
     print(title)
+    exit(0)
     simulations = []
     for i in range(100):
         print("Simulation Iteration:", i)
