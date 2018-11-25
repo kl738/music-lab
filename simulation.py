@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 '''
 TODO: plot of GINI index coefficient, plot of means of market shares of all songs
 '''
